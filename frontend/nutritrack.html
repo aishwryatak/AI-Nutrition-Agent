@@ -1,0 +1,2129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NutriTrack – Smart Nutrition Dashboard</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #f0f4f8;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --text: #1a202c;
+      --muted: #718096;
+      --accent: #38a169;
+      --accent-dark: #276749;
+      --accent2: #3182ce;
+      --danger: #e53e3e;
+      --warn: #dd6b20;
+      --purple: #805ad5;
+      --shadow: 0 4px 18px rgba(0,0,0,.06);
+      --radius: 14px;
+    }
+
+    body.dark {
+      --bg: #111827;
+      --card: #1f2937;
+      --border: #374151;
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+      --shadow: 0 4px 18px rgba(0,0,0,.25);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 60px;
+      transition: background .3s, color .3s;
+    }
+
+    /* HEADER */
+    header {
+      background: linear-gradient(135deg, #276749, #38a169);
+      color: white;
+      padding: 22px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      flex-wrap: wrap;
+      box-shadow: 0 4px 15px rgba(0,0,0,.12);
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: 750;
+    }
+
+    header p {
+      font-size: .88rem;
+      opacity: .88;
+      margin-top: 3px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #dateDisplay {
+      font-size: .9rem;
+      background: rgba(255,255,255,.15);
+      padding: 7px 14px;
+      border-radius: 20px;
+    }
+
+    .theme-btn {
+      border: 1px solid rgba(255,255,255,.4);
+      background: rgba(255,255,255,.15);
+      color: white;
+      border-radius: 20px;
+      padding: 7px 13px;
+      cursor: pointer;
+      font-size: .85rem;
+    }
+
+    /* LAYOUT */
+    .container {
+      max-width: 1150px;
+      margin: auto;
+      padding: 28px 20px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    @media(max-width: 800px) {
+      .grid-2,
+      .grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* CARDS */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: var(--shadow);
+      transition: background .3s, border .3s;
+    }
+
+    .card h2 {
+      font-size: 1.05rem;
+      margin-bottom: 17px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* SUMMARY */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    @media(max-width: 650px) {
+      .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .ring-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 14px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .ring-card .label {
+      font-size: .76rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 9px;
+    }
+
+    .ring-card .value {
+      font-size: 1.4rem;
+      font-weight: 750;
+    }
+
+    .ring-card .sub {
+      color: var(--muted);
+      font-size: .77rem;
+      margin-top: 2px;
+    }
+
+    /* PROGRESS */
+    .bar-track {
+      height: 9px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width .4s ease;
+    }
+
+    .bar-red { background: var(--danger); }
+    .bar-blue { background: var(--accent2); }
+    .bar-orange { background: var(--warn); }
+    .bar-green { background: var(--accent); }
+
+    /* FORMS */
+    .form-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    @media(max-width: 850px) {
+      .form-row {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .form-group label {
+      color: var(--muted);
+      font-size: .76rem;
+      font-weight: 650;
+      text-transform: uppercase;
+    }
+
+    input,
+    select {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 11px;
+      font-size: .9rem;
+      outline: none;
+      background: var(--card);
+      color: var(--text);
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--accent);
+    }
+
+    .btn {
+      border: none;
+      border-radius: 8px;
+      padding: 9px 17px;
+      font-size: .88rem;
+      font-weight: 650;
+      cursor: pointer;
+      transition: .2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      opacity: .9;
+    }
+
+    .btn-green {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-blue {
+      background: var(--accent2);
+      color: white;
+    }
+
+    .btn-purple {
+      background: var(--purple);
+      color: white;
+    }
+
+    .btn-red {
+      background: var(--danger);
+      color: white;
+      padding: 5px 10px;
+      font-size: .76rem;
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    /* PROFILE */
+    .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    @media(max-width: 700px) {
+      .profile-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .profile-result {
+      margin-top: 18px;
+      background: rgba(56,161,105,.09);
+      border-left: 4px solid var(--accent);
+      padding: 15px;
+      border-radius: 8px;
+      line-height: 1.7;
+    }
+
+    .metric {
+      display: flex;
+      justify-content: space-between;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .metric:last-child {
+      border-bottom: none;
+    }
+
+    /* TABLE */
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .86rem;
+    }
+
+    th {
+      background: rgba(128,128,128,.07);
+      color: var(--muted);
+      padding: 10px;
+      text-align: left;
+      font-size: .75rem;
+      text-transform: uppercase;
+    }
+
+    td {
+      padding: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody tr:hover {
+      background: rgba(128,128,128,.05);
+    }
+
+    .empty-row td {
+      text-align: center;
+      color: var(--muted);
+      padding: 28px;
+    }
+
+    /* MACRO */
+    .macro-bar-row {
+      display: flex;
+      height: 20px;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    .macro-seg {
+      transition: flex .4s ease;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 13px;
+      font-size: .8rem;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 4px;
+    }
+
+    /* WATER */
+    .water-glasses {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin: 15px 0;
+    }
+
+    .glass {
+      width: 40px;
+      height: 50px;
+      border: 2px solid #90cdf4;
+      border-radius: 4px 4px 8px 8px;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .glass .fill {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 0;
+      background: #63b3ed;
+      transition: height .3s;
+    }
+
+    .glass.filled .fill {
+      height: 100%;
+    }
+
+    .glass span {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+    }
+
+    /* TIPS */
+    .tip-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .tip-list li {
+      background: rgba(56,161,105,.08);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 10px 14px;
+      font-size: .86rem;
+      line-height: 1.5;
+    }
+
+    /* SECTION */
+    .section-title {
+      font-size: 1.15rem;
+      font-weight: 750;
+      margin: 28px 0 14px;
+    }
+
+    /* HEALTH SCORE */
+    .score-card {
+      text-align: center;
+      background: linear-gradient(135deg, rgba(56,161,105,.1), rgba(49,130,206,.1));
+    }
+
+    .score-number {
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    .score-label {
+      color: var(--muted);
+      font-size: .85rem;
+    }
+
+    /* TOAST */
+    #toast {
+      position: fixed;
+      left: 50%;
+      bottom: 25px;
+      transform: translateX(-50%) translateY(80px);
+      background: #1a202c;
+      color: white;
+      padding: 12px 22px;
+      border-radius: 10px;
+      opacity: 0;
+      transition: .3s;
+      z-index: 9999;
+      white-space: nowrap;
+      font-size: .88rem;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .small-note {
+      color: var(--muted);
+      font-size: .78rem;
+      line-height: 1.5;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div>
+    <h1>🥗 NutriTrack</h1>
+    <p>Smart Daily Nutrition & Wellness Dashboard</p>
+  </div>
+
+  <div class="header-actions">
+    <div id="dateDisplay"></div>
+    <button class="theme-btn" onclick="toggleDarkMode()" id="themeBtn">
+      🌙 Dark Mode
+    </button>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- PROFILE -->
+  <div class="section-title">👤 Personal Profile</div>
+
+  <div class="card">
+    <div class="profile-grid">
+
+      <div class="form-group">
+        <label>Name</label>
+        <input type="text" id="profileName" placeholder="Enter your name">
+      </div>
+
+      <div class="form-group">
+        <label>Age</label>
+        <input type="number" id="profileAge" min="10" max="100" placeholder="Years">
+      </div>
+
+      <div class="form-group">
+        <label>Gender</label>
+        <select id="profileGender">
+          <option value="">Select</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Height (cm)</label>
+        <input type="number" id="profileHeight" min="100" max="250" placeholder="e.g. 170">
+      </div>
+
+      <div class="form-group">
+        <label>Weight (kg)</label>
+        <input type="number" id="profileWeight" min="20" max="300" step="0.1" placeholder="e.g. 65">
+      </div>
+
+      <div class="form-group">
+        <label>Activity Level</label>
+        <select id="activityLevel">
+          <option value="1.2">Sedentary</option>
+          <option value="1.375">Lightly Active</option>
+          <option value="1.55">Moderately Active</option>
+          <option value="1.725">Very Active</option>
+          <option value="1.9">Extremely Active</option>
+        </select>
+      </div>
+
+    </div>
+
+    <div style="margin-top:15px; display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn btn-green" onclick="calculateProfile()">
+        🧮 Calculate My Goals
+      </button>
+
+      <button class="btn btn-outline" onclick="saveProfile()">
+        💾 Save Profile
+      </button>
+
+      <button class="btn btn-outline" onclick="resetProfile()">
+        Reset
+      </button>
+    </div>
+
+    <div class="profile-result" id="profileResult">
+      Enter your information and click <strong>Calculate My Goals</strong>.
+    </div>
+  </div>
+
+
+  <!-- SUMMARY -->
+  <div class="section-title">📊 Today's Progress</div>
+
+  <div class="summary-grid">
+
+    <div class="ring-card">
+      <div class="label">Calories</div>
+      <div class="value" id="sumCalories">0</div>
+      <div class="sub" id="subCalories">of 2000 kcal</div>
+      <div class="bar-track" style="margin-top:8px">
+        <div class="bar-fill bar-red" id="barCalories" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="ring-card">
+      <div class="label">Protein</div>
+      <div class="value" id="sumProtein">0g</div>
+      <div class="sub" id="subProtein">of 150g</div>
+      <div class="bar-track" style="margin-top:8px">
+        <div class="bar-fill bar-blue" id="barProtein" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="ring-card">
+      <div class="label">Carbs</div>
+      <div class="value" id="sumCarbs">0g</div>
+      <div class="sub" id="subCarbs">of 250g</div>
+      <div class="bar-track" style="margin-top:8px">
+        <div class="bar-fill bar-orange" id="barCarbs" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="ring-card">
+      <div class="label">Fat</div>
+      <div class="value" id="sumFat">0g</div>
+      <div class="sub" id="subFat">of 65g</div>
+      <div class="bar-track" style="margin-top:8px">
+        <div class="bar-fill bar-green" id="barFat" style="width:0%"></div>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- FOOD -->
+  <div class="card" style="margin-bottom:20px">
+
+    <h2>➕ Log Food</h2>
+
+    <div class="form-row">
+
+      <div class="form-group">
+        <label>Food Name</label>
+        <input
+          type="text"
+          id="foodName"
+          placeholder="e.g. Grilled Chicken"
+          list="foodSuggestions"
+        >
+
+        <datalist id="foodSuggestions">
+          <option value="Grilled Chicken Breast">
+          <option value="Brown Rice">
+          <option value="Boiled Eggs">
+          <option value="Oatmeal">
+          <option value="Banana">
+          <option value="Greek Yogurt">
+          <option value="Avocado">
+          <option value="Almonds">
+          <option value="Whole Milk">
+          <option value="Salmon Fillet">
+          <option value="Sweet Potato">
+          <option value="Broccoli">
+          <option value="Apple">
+          <option value="Cheddar Cheese">
+          <option value="White Bread">
+        </datalist>
+      </div>
+
+      <div class="form-group">
+        <label>Calories</label>
+        <input type="number" id="foodCalories" min="0" placeholder="kcal">
+      </div>
+
+      <div class="form-group">
+        <label>Protein</label>
+        <input type="number" id="foodProtein" min="0" placeholder="g">
+      </div>
+
+      <div class="form-group">
+        <label>Carbs</label>
+        <input type="number" id="foodCarbs" min="0" placeholder="g">
+      </div>
+
+      <div class="form-group">
+        <label>Fat</label>
+        <input type="number" id="foodFat" min="0" placeholder="g">
+      </div>
+
+      <div class="form-group">
+        <label>&nbsp;</label>
+        <button class="btn btn-green" onclick="addFood()">Add</button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- FOOD LOG + MACROS -->
+  <div class="grid-2">
+
+    <div class="card">
+
+      <h2>
+        📋 Today's Food Log
+
+        <button
+          class="btn btn-outline"
+          style="margin-left:auto;font-size:.76rem;padding:5px 10px"
+          onclick="clearAll()"
+        >
+          Clear All
+        </button>
+      </h2>
+
+      <div class="table-wrap">
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>Food</th>
+              <th>Kcal</th>
+              <th>Protein</th>
+              <th>Carbs</th>
+              <th>Fat</th>
+              <th></th>
+            </tr>
+          </thead>
+
+          <tbody id="foodLog">
+            <tr class="empty-row">
+              <td colspan="6">No food logged yet.</td>
+            </tr>
+          </tbody>
+
+        </table>
+
+      </div>
+    </div>
+
+
+    <div class="card">
+
+      <h2>🥧 Macro Breakdown</h2>
+
+      <div class="macro-bar-row" id="macroBar">
+        <div style="flex:1;background:#edf2f7"></div>
+      </div>
+
+      <div class="legend">
+
+        <span>
+          <span class="legend-dot" style="background:#3182ce"></span>
+          Protein <strong id="lgProtein">0g</strong>
+        </span>
+
+        <span>
+          <span class="legend-dot" style="background:#dd6b20"></span>
+          Carbs <strong id="lgCarbs">0g</strong>
+        </span>
+
+        <span>
+          <span class="legend-dot" style="background:#38a169"></span>
+          Fat <strong id="lgFat">0g</strong>
+        </span>
+
+      </div>
+
+      <div style="margin-top:22px">
+
+        <div class="progress-wrap">
+          <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:5px">
+            <span>🔵 Protein</span>
+            <span id="pctProtein">0%</span>
+          </div>
+
+          <div class="bar-track">
+            <div class="bar-fill bar-blue" id="barP2" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:5px">
+            <span>🟠 Carbohydrates</span>
+            <span id="pctCarbs">0%</span>
+          </div>
+
+          <div class="bar-track">
+            <div class="bar-fill bar-orange" id="barC2" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:5px">
+            <span>🟢 Fat</span>
+            <span id="pctFat">0%</span>
+          </div>
+
+          <div class="bar-track">
+            <div class="bar-fill bar-green" id="barF2" style="width:0%"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <div style="margin-top:20px;padding:14px;background:rgba(128,128,128,.08);border-radius:8px">
+        <strong>Calorie Status:</strong>
+        <span id="calStatus" style="margin-left:8px"></span>
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- BMI / CALCULATOR -->
+  <div class="section-title">🧮 Health Calculations</div>
+
+  <div class="grid-3">
+
+    <div class="card score-card">
+      <h2 style="justify-content:center">⚖️ BMI</h2>
+
+      <div class="score-number" id="bmiValue">--</div>
+
+      <div class="score-label" id="bmiCategory">
+        Enter profile details
+      </div>
+    </div>
+
+    <div class="card score-card">
+      <h2 style="justify-content:center">🔥 BMR</h2>
+
+      <div class="score-number" id="bmrValue">--</div>
+
+      <div class="score-label">
+        Basal kcal/day
+      </div>
+    </div>
+
+    <div class="card score-card">
+      <h2 style="justify-content:center">⚡ TDEE</h2>
+
+      <div class="score-number" id="tdeeValue">--</div>
+
+      <div class="score-label">
+        Estimated kcal/day
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- WATER + GOALS -->
+  <div class="grid-2" style="margin-top:20px">
+
+    <div class="card">
+
+      <h2>💧 Water Intake</h2>
+
+      <p style="font-size:.85rem;color:var(--muted)">
+        Click glasses to log your water intake.
+        Goal:
+        <strong id="waterGoalDisplay">8</strong>
+        glasses/day
+      </p>
+
+      <div class="water-glasses" id="waterGlasses"></div>
+
+      <div>
+        <strong id="waterCount">0</strong>
+        /
+        <span id="waterGoalSpan">8</span>
+        glasses
+
+        <span id="waterBadge" style="margin-left:10px"></span>
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <h2>🎯 Daily Goals</h2>
+
+      <div class="profile-grid">
+
+        <div class="form-group">
+          <label>Calories</label>
+          <input type="number" id="goalCalories" value="2000" min="500">
+        </div>
+
+        <div class="form-group">
+          <label>Protein (g)</label>
+          <input type="number" id="goalProtein" value="150" min="0">
+        </div>
+
+        <div class="form-group">
+          <label>Carbs (g)</label>
+          <input type="number" id="goalCarbs" value="250" min="0">
+        </div>
+
+        <div class="form-group">
+          <label>Fat (g)</label>
+          <input type="number" id="goalFat" value="65" min="0">
+        </div>
+
+        <div class="form-group">
+          <label>Water</label>
+          <input type="number" id="goalWater" value="8" min="1" max="20">
+        </div>
+
+      </div>
+
+      <button
+        class="btn btn-green"
+        style="margin-top:14px"
+        onclick="applyGoals()"
+      >
+        Apply Goals
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- HEALTH SCORE -->
+  <div class="section-title">🏆 Daily Health Score</div>
+
+  <div class="card score-card">
+
+    <div class="score-number" id="healthScore">0</div>
+
+    <div class="score-label">
+      Your nutrition score out of 100
+    </div>
+
+    <div
+      id="scoreMessage"
+      style="margin-top:10px;font-size:.9rem"
+    >
+      Start logging your meals and water intake.
+    </div>
+
+  </div>
+
+
+  <!-- TIPS -->
+  <div class="section-title">💡 Nutrition Tips</div>
+
+  <div class="card">
+    <ul class="tip-list" id="tipList"></ul>
+  </div>
+
+</div>
+
+
+<div id="toast"></div>
+
+
+<script>
+
+  /* ==============================
+     APPLICATION DATA
+  ============================== */
+
+  let foods = JSON.parse(
+    localStorage.getItem("nutritrack_foods") || "[]"
+  );
+
+  let waterCount = Number(
+    localStorage.getItem("nutritrack_water") || 0
+  );
+
+  let goals = JSON.parse(
+    localStorage.getItem("nutritrack_goals") ||
+    JSON.stringify({
+      calories: 2000,
+      protein: 150,
+      carbs: 250,
+      fat: 65,
+      water: 8
+    })
+  );
+
+
+  /* ==============================
+     DATE
+  ============================== */
+
+  function updateDate() {
+
+    const now = new Date();
+
+    document.getElementById("dateDisplay").textContent =
+      now.toLocaleDateString("en-IN", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: "numeric"
+      });
+  }
+
+
+  /* ==============================
+     TOAST
+  ============================== */
+
+  function showToast(message) {
+
+    const toast = document.getElementById("toast");
+
+    toast.textContent = message;
+    toast.classList.add("show");
+
+    setTimeout(() => {
+      toast.classList.remove("show");
+    }, 2200);
+  }
+
+
+  /* ==============================
+     DARK MODE
+  ============================== */
+
+  function toggleDarkMode() {
+
+    document.body.classList.toggle("dark");
+
+    const dark =
+      document.body.classList.contains("dark");
+
+    localStorage.setItem(
+      "nutritrack_dark",
+      dark ? "1" : "0"
+    );
+
+    document.getElementById("themeBtn").textContent =
+      dark ? "☀️ Light Mode" : "🌙 Dark Mode";
+  }
+
+
+  function loadDarkMode() {
+
+    const dark =
+      localStorage.getItem("nutritrack_dark") === "1";
+
+    if (dark) {
+      document.body.classList.add("dark");
+
+      document.getElementById("themeBtn").textContent =
+        "☀️ Light Mode";
+    }
+  }
+
+
+  /* ==============================
+     PROFILE
+  ============================== */
+
+  function saveProfile() {
+
+    const profile = {
+      name: document.getElementById("profileName").value,
+      age: document.getElementById("profileAge").value,
+      gender: document.getElementById("profileGender").value,
+      height: document.getElementById("profileHeight").value,
+      weight: document.getElementById("profileWeight").value,
+      activity: document.getElementById("activityLevel").value
+    };
+
+    localStorage.setItem(
+      "nutritrack_profile",
+      JSON.stringify(profile)
+    );
+
+    showToast("Profile saved successfully!");
+  }
+
+
+  function loadProfile() {
+
+    const saved =
+      localStorage.getItem("nutritrack_profile");
+
+    if (!saved) return;
+
+    const profile = JSON.parse(saved);
+
+    document.getElementById("profileName").value =
+      profile.name || "";
+
+    document.getElementById("profileAge").value =
+      profile.age || "";
+
+    document.getElementById("profileGender").value =
+      profile.gender || "";
+
+    document.getElementById("profileHeight").value =
+      profile.height || "";
+
+    document.getElementById("profileWeight").value =
+      profile.weight || "";
+
+    document.getElementById("activityLevel").value =
+      profile.activity || "1.2";
+  }
+
+
+  function resetProfile() {
+
+    if (!confirm("Reset your profile?")) return;
+
+    localStorage.removeItem("nutritrack_profile");
+
+    document.getElementById("profileName").value = "";
+    document.getElementById("profileAge").value = "";
+    document.getElementById("profileGender").value = "";
+    document.getElementById("profileHeight").value = "";
+    document.getElementById("profileWeight").value = "";
+
+    document.getElementById("bmiValue").textContent = "--";
+    document.getElementById("bmrValue").textContent = "--";
+    document.getElementById("tdeeValue").textContent = "--";
+
+    document.getElementById("bmiCategory").textContent =
+      "Enter profile details";
+
+    document.getElementById("profileResult").innerHTML =
+      "Enter your information and click <strong>Calculate My Goals</strong>.";
+
+    showToast("Profile reset.");
+  }
+
+
+  /* ==============================
+     BMI / BMR / TDEE
+  ============================== */
+
+  function calculateProfile() {
+
+    const name =
+      document.getElementById("profileName").value.trim();
+
+    const age =
+      Number(document.getElementById("profileAge").value);
+
+    const gender =
+      document.getElementById("profileGender").value;
+
+    const height =
+      Number(document.getElementById("profileHeight").value);
+
+    const weight =
+      Number(document.getElementById("profileWeight").value);
+
+    const activity =
+      Number(document.getElementById("activityLevel").value);
+
+    if (
+      !age ||
+      !gender ||
+      !height ||
+      !weight
+    ) {
+      showToast("Please complete your profile first.");
+      return;
+    }
+
+
+    /* BMI */
+
+    const heightMeters = height / 100;
+
+    const bmi =
+      weight / (heightMeters * heightMeters);
+
+    let bmiCategory = "";
+
+    if (bmi < 18.5) {
+      bmiCategory = "Underweight";
+    }
+    else if (bmi < 25) {
+      bmiCategory = "Healthy weight";
+    }
+    else if (bmi < 30) {
+      bmiCategory = "Overweight";
+    }
+    else {
+      bmiCategory = "Obesity range";
+    }
+
+
+    /* BMR - Mifflin St Jeor */
+
+    let bmr;
+
+    if (gender === "male") {
+
+      bmr =
+        (10 * weight) +
+        (6.25 * height) -
+        (5 * age) +
+        5;
+
+    } else {
+
+      bmr =
+        (10 * weight) +
+        (6.25 * height) -
+        (5 * age) -
+        161;
+    }
+
+
+    /* TDEE */
+
+    const tdee = bmr * activity;
+
+
+    /* Personalized goals */
+
+    const calorieGoal =
+      Math.round(tdee);
+
+    const proteinGoal =
+      Math.round(weight * 1.6);
+
+    const fatGoal =
+      Math.round((calorieGoal * .25) / 9);
+
+    const carbCalories =
+      calorieGoal -
+      (proteinGoal * 4) -
+      (fatGoal * 9);
+
+    const carbGoal =
+      Math.max(
+        0,
+        Math.round(carbCalories / 4)
+      );
+
+
+    /* Display */
+
+    document.getElementById("bmiValue").textContent =
+      bmi.toFixed(1);
+
+    document.getElementById("bmiCategory").textContent =
+      bmiCategory;
+
+    document.getElementById("bmrValue").textContent =
+      Math.round(bmr);
+
+    document.getElementById("tdeeValue").textContent =
+      Math.round(tdee);
+
+
+    document.getElementById("profileResult").innerHTML = `
+      <strong>${name ? "Hello " + escapeHtml(name) + "! " : ""}Your personalized results:</strong>
+
+      <div class="metric">
+        <span>BMI</span>
+        <strong>${bmi.toFixed(1)} — ${bmiCategory}</strong>
+      </div>
+
+      <div class="metric">
+        <span>BMR</span>
+        <strong>${Math.round(bmr)} kcal/day</strong>
+      </div>
+
+      <div class="metric">
+        <span>Estimated TDEE</span>
+        <strong>${Math.round(tdee)} kcal/day</strong>
+      </div>
+
+      <div class="metric">
+        <span>Suggested Calories</span>
+        <strong>${calorieGoal} kcal/day</strong>
+      </div>
+
+      <div class="metric">
+        <span>Suggested Protein</span>
+        <strong>${proteinGoal} g/day</strong>
+      </div>
+
+      <div class="metric">
+        <span>Suggested Carbs</span>
+        <strong>${carbGoal} g/day</strong>
+      </div>
+
+      <div class="metric">
+        <span>Suggested Fat</span>
+        <strong>${fatGoal} g/day</strong>
+      </div>
+    `;
+
+
+    /* Automatically apply goals */
+
+    goals.calories = calorieGoal;
+    goals.protein = proteinGoal;
+    goals.carbs = carbGoal;
+    goals.fat = fatGoal;
+
+    document.getElementById("goalCalories").value =
+      calorieGoal;
+
+    document.getElementById("goalProtein").value =
+      proteinGoal;
+
+    document.getElementById("goalCarbs").value =
+      carbGoal;
+
+    document.getElementById("goalFat").value =
+      fatGoal;
+
+    saveGoals();
+
+    saveProfile();
+
+    updateDashboard();
+
+    showToast("Personalized goals calculated!");
+  }
+
+
+  /* ==============================
+     FOOD
+  ============================== */
+
+  function addFood() {
+
+    const name =
+      document.getElementById("foodName").value.trim();
+
+    const calories =
+      Number(document.getElementById("foodCalories").value);
+
+    const protein =
+      Number(document.getElementById("foodProtein").value);
+
+    const carbs =
+      Number(document.getElementById("foodCarbs").value);
+
+    const fat =
+      Number(document.getElementById("foodFat").value);
+
+
+    if (!name) {
+      showToast("Enter a food name.");
+      return;
+    }
+
+    if (
+      calories < 0 ||
+      protein < 0 ||
+      carbs < 0 ||
+      fat < 0
+    ) {
+      showToast("Nutrition values cannot be negative.");
+      return;
+    }
+
+
+    foods.push({
+      id: Date.now(),
+      name,
+      calories,
+      protein,
+      carbs,
+      fat
+    });
+
+
+    saveFoods();
+
+    clearFoodInputs();
+
+    updateDashboard();
+
+    showToast(`${name} added!`);
+  }
+
+
+  function clearFoodInputs() {
+
+    document.getElementById("foodName").value = "";
+    document.getElementById("foodCalories").value = "";
+    document.getElementById("foodProtein").value = "";
+    document.getElementById("foodCarbs").value = "";
+    document.getElementById("foodFat").value = "";
+  }
+
+
+  function deleteFood(id) {
+
+    foods =
+      foods.filter(food => food.id !== id);
+
+    saveFoods();
+
+    updateDashboard();
+
+    showToast("Food entry deleted.");
+  }
+
+
+  function clearAll() {
+
+    if (!foods.length) {
+      showToast("Food log is already empty.");
+      return;
+    }
+
+    if (!confirm("Clear today's entire food log?")) {
+      return;
+    }
+
+    foods = [];
+
+    saveFoods();
+
+    updateDashboard();
+
+    showToast("Food log cleared.");
+  }
+
+
+  function saveFoods() {
+
+    localStorage.setItem(
+      "nutritrack_foods",
+      JSON.stringify(foods)
+    );
+  }
+
+
+  /* ==============================
+     GOALS
+  ============================== */
+
+  function applyGoals() {
+
+    goals = {
+      calories: Number(
+        document.getElementById("goalCalories").value
+      ) || 2000,
+
+      protein: Number(
+        document.getElementById("goalProtein").value
+      ) || 150,
+
+      carbs: Number(
+        document.getElementById("goalCarbs").value
+      ) || 250,
+
+      fat: Number(
+        document.getElementById("goalFat").value
+      ) || 65,
+
+      water: Number(
+        document.getElementById("goalWater").value
+      ) || 8
+    };
+
+    saveGoals();
+
+    renderWater();
+
+    updateDashboard();
+
+    showToast("Daily goals updated!");
+  }
+
+
+  function saveGoals() {
+
+    localStorage.setItem(
+      "nutritrack_goals",
+      JSON.stringify(goals)
+    );
+  }
+
+
+  function loadGoals() {
+
+    document.getElementById("goalCalories").value =
+      goals.calories;
+
+    document.getElementById("goalProtein").value =
+      goals.protein;
+
+    document.getElementById("goalCarbs").value =
+      goals.carbs;
+
+    document.getElementById("goalFat").value =
+      goals.fat;
+
+    document.getElementById("goalWater").value =
+      goals.water;
+  }
+
+
+  /* ==============================
+     DASHBOARD
+  ============================== */
+
+  function updateDashboard() {
+
+    const totals = foods.reduce(
+      (sum, food) => {
+
+        sum.calories += Number(food.calories) || 0;
+        sum.protein += Number(food.protein) || 0;
+        sum.carbs += Number(food.carbs) || 0;
+        sum.fat += Number(food.fat) || 0;
+
+        return sum;
+
+      },
+      {
+        calories: 0,
+        protein: 0,
+        carbs: 0,
+        fat: 0
+      }
+    );
+
+
+    /* SUMMARY */
+
+    document.getElementById("sumCalories").textContent =
+      Math.round(totals.calories);
+
+    document.getElementById("sumProtein").textContent =
+      Math.round(totals.protein) + "g";
+
+    document.getElementById("sumCarbs").textContent =
+      Math.round(totals.carbs) + "g";
+
+    document.getElementById("sumFat").textContent =
+      Math.round(totals.fat) + "g";
+
+
+    document.getElementById("subCalories").textContent =
+      `of ${goals.calories} kcal`;
+
+    document.getElementById("subProtein").textContent =
+      `of ${goals.protein}g`;
+
+    document.getElementById("subCarbs").textContent =
+      `of ${goals.carbs}g`;
+
+    document.getElementById("subFat").textContent =
+      `of ${goals.fat}g`;
+
+
+    setProgress(
+      "barCalories",
+      totals.calories,
+      goals.calories
+    );
+
+    setProgress(
+      "barProtein",
+      totals.protein,
+      goals.protein
+    );
+
+    setProgress(
+      "barCarbs",
+      totals.carbs,
+      goals.carbs
+    );
+
+    setProgress(
+      "barFat",
+      totals.fat,
+      goals.fat
+    );
+
+
+    /* FOOD TABLE */
+
+    renderFoodTable();
+
+
+    /* MACROS */
+
+    updateMacros(totals);
+
+
+    /* STATUS */
+
+    const caloriePercentage =
+      goals.calories
+        ? totals.calories / goals.calories * 100
+        : 0;
+
+    let status = "";
+
+    if (caloriePercentage === 0) {
+      status = "🍽️ Start logging your meals.";
+    }
+    else if (caloriePercentage < 50) {
+      status = "🌱 You're getting started.";
+    }
+    else if (caloriePercentage <= 100) {
+      status = "✅ You're within your calorie goal.";
+    }
+    else {
+      status = "⚠️ You've exceeded your calorie goal.";
+    }
+
+    document.getElementById("calStatus").textContent =
+      status;
+
+
+    /* WATER */
+
+    document.getElementById("waterCount").textContent =
+      waterCount;
+
+    document.getElementById("waterGoalSpan").textContent =
+      goals.water;
+
+    document.getElementById("waterGoalDisplay").textContent =
+      goals.water;
+
+    renderWaterBadge();
+
+
+    /* HEALTH SCORE */
+
+    calculateHealthScore(totals);
+
+
+    /* TIPS */
+
+    generateTips(totals);
+  }
+
+
+  function setProgress(id, value, goal) {
+
+    const percentage =
+      goal > 0
+        ? Math.min(100, (value / goal) * 100)
+        : 0;
+
+    document.getElementById(id).style.width =
+      percentage + "%";
+  }
+
+
+  /* ==============================
+     FOOD TABLE
+  ============================== */
+
+  function renderFoodTable() {
+
+    const tbody =
+      document.getElementById("foodLog");
+
+    if (!foods.length) {
+
+      tbody.innerHTML = `
+        <tr class="empty-row">
+          <td colspan="6">
+            No food logged yet. Add your first meal above!
+          </td>
+        </tr>
+      `;
+
+      return;
+    }
+
+
+    tbody.innerHTML =
+      foods.map(food => `
+        <tr>
+
+          <td>
+            <strong>${escapeHtml(food.name)}</strong>
+          </td>
+
+          <td>${food.calories}</td>
+
+          <td>${food.protein}g</td>
+
+          <td>${food.carbs}g</td>
+
+          <td>${food.fat}g</td>
+
+          <td>
+            <button
+              class="btn btn-red"
+              onclick="deleteFood(${food.id})"
+            >
+              Delete
+            </button>
+          </td>
+
+        </tr>
+      `).join("");
+  }
+
+
+  /* ==============================
+     MACROS
+  ============================== */
+
+  function updateMacros(totals) {
+
+    document.getElementById("lgProtein").textContent =
+      Math.round(totals.protein) + "g";
+
+    document.getElementById("lgCarbs").textContent =
+      Math.round(totals.carbs) + "g";
+
+    document.getElementById("lgFat").textContent =
+      Math.round(totals.fat) + "g";
+
+
+    const p =
+      totals.protein * 4;
+
+    const c =
+      totals.carbs * 4;
+
+    const f =
+      totals.fat * 9;
+
+    const total =
+      p + c + f;
+
+
+    const macroBar =
+      document.getElementById("macroBar");
+
+
+    if (total === 0) {
+
+      macroBar.innerHTML =
+        `<div style="flex:1;background:#edf2f7"></div>`;
+
+    } else {
+
+      macroBar.innerHTML = `
+
+        <div
+          class="macro-seg"
+          style="flex:${p};background:#3182ce"
+        ></div>
+
+        <div
+          class="macro-seg"
+          style="flex:${c};background:#dd6b20"
+        ></div>
+
+        <div
+          class="macro-seg"
+          style="flex:${f};background:#38a169"
+        ></div>
+      `;
+    }
+
+
+    const proteinPct =
+      goals.protein
+        ? Math.min(100, totals.protein / goals.protein * 100)
+        : 0;
+
+    const carbsPct =
+      goals.carbs
+        ? Math.min(100, totals.carbs / goals.carbs * 100)
+        : 0;
+
+    const fatPct =
+      goals.fat
+        ? Math.min(100, totals.fat / goals.fat * 100)
+        : 0;
+
+
+    document.getElementById("pctProtein").textContent =
+      Math.round(proteinPct) + "%";
+
+    document.getElementById("pctCarbs").textContent =
+      Math.round(carbsPct) + "%";
+
+    document.getElementById("pctFat").textContent =
+      Math.round(fatPct) + "%";
+
+
+    document.getElementById("barP2").style.width =
+      proteinPct + "%";
+
+    document.getElementById("barC2").style.width =
+      carbsPct + "%";
+
+    document.getElementById("barF2").style.width =
+      fatPct + "%";
+  }
+
+
+  /* ==============================
+     WATER
+  ============================== */
+
+  function renderWater() {
+
+    const container =
+      document.getElementById("waterGlasses");
+
+    container.innerHTML = "";
+
+    for (
+      let i = 0;
+      i < goals.water;
+      i++
+    ) {
+
+      const glass =
+        document.createElement("div");
+
+      glass.className =
+        "glass" +
+        (i < waterCount ? " filled" : "");
+
+      glass.innerHTML =
+        `<div class="fill"></div><span>💧</span>`;
+
+      glass.onclick = () => {
+
+        if (i < waterCount) {
+
+          waterCount = i;
+
+        } else {
+
+          waterCount = i + 1;
+        }
+
+        localStorage.setItem(
+          "nutritrack_water",
+          waterCount
+        );
+
+        renderWater();
+
+        updateDashboard();
+
+      };
+
+      container.appendChild(glass);
+    }
+  }
+
+
+  function renderWaterBadge() {
+
+    const badge =
+      document.getElementById("waterBadge");
+
+    if (waterCount >= goals.water) {
+
+      badge.innerHTML =
+        `<span style="color:#276749;font-weight:700">🎉 Goal reached!</span>`;
+
+    }
+    else if (waterCount >= goals.water * .75) {
+
+      badge.innerHTML =
+        `<span style="color:#dd6b20;font-weight:700">Almost there!</span>`;
+
+    }
+    else {
+
+      badge.innerHTML = "";
+    }
+  }
+
+
+  /* ==============================
+     HEALTH SCORE
+  ============================== */
+
+  function calculateHealthScore(totals) {
+
+    let score = 0;
+
+
+    /* Calories */
+
+    if (
+      totals.calories >= goals.calories * .8 &&
+      totals.calories <= goals.calories
+    ) {
+      score += 35;
+    }
+    else if (
+      totals.calories >= goals.calories * .6
+    ) {
+      score += 25;
+    }
+    else if (totals.calories > 0) {
+      score += 15;
+    }
+
+
+    /* Protein */
+
+    if (totals.protein >= goals.protein) {
+      score += 25;
+    }
+    else if (
+      totals.protein >= goals.protein * .7
+    ) {
+      score += 18;
+    }
+    else if (totals.protein > 0) {
+      score += 10;
+    }
+
+
+    /* Water */
+
+    if (waterCount >= goals.water) {
+      score += 25;
+    }
+    else if (
+      waterCount >= goals.water * .7
+    ) {
+      score += 18;
+    }
+    else if (waterCount > 0) {
+      score += 10;
+    }
+
+
+    /* Food variety */
+
+    const variety =
+      new Set(
+        foods.map(
+          food => food.name.toLowerCase()
+        )
+      ).size;
+
+    if (variety >= 5) {
+      score += 15;
+    }
+    else if (variety >= 3) {
+      score += 10;
+    }
+    else if (variety > 0) {
+      score += 5;
+    }
+
+
+    score =
+      Math.min(100, Math.round(score));
+
+
+    document.getElementById("healthScore").textContent =
+      score;
+
+
+    let message = "";
+
+    if (score >= 85) {
+      message = "🌟 Excellent! You're doing great today.";
+    }
+    else if (score >= 70) {
+      message = "👏 Good job! Keep maintaining your habits.";
+    }
+    else if (score >= 50) {
+      message = "💪 You're making progress. Keep going!";
+    }
+    else {
+      message = "🌱 Start with balanced meals and enough water.";
+    }
+
+
+    document.getElementById("scoreMessage").textContent =
+      message;
+  }
+
+
+  /* ==============================
+     TIPS
+  ============================== */
+
+  function generateTips(totals) {
+
+    const tips = [];
+
+    if (totals.protein < goals.protein * .7) {
+      tips.push(
+        "💪 Add protein-rich foods such as eggs, lentils, yogurt, chicken, fish or beans."
+      );
+    }
+
+    if (totals.calories < goals.calories * .5) {
+      tips.push(
+        "🍽️ Your calorie intake is still relatively low. Make sure you are eating balanced meals throughout the day."
+      );
+    }
+
+    if (waterCount < goals.water) {
+      tips.push(
+        "💧 Keep drinking water regularly throughout the day."
+      );
+    }
+
+    if (totals.carbs > goals.carbs) {
+      tips.push(
+        "🥗 Your carbohydrate intake is above today's target. Consider balancing your next meal with vegetables and protein."
+      );
+    }
+
+    if (totals.fat > goals.fat) {
+      tips.push(
+        "🥑 Your fat intake is above today's target. Choose lighter cooking methods for your next meal."
+      );
+    }
+
+    tips.push(
+      "🌈 Aim for variety by including fruits, vegetables, whole grains and protein sources."
+    );
+
+    tips.push(
+      "😴 Good nutrition works best alongside adequate sleep and regular physical activity."
+    );
+
+
+    document.getElementById("tipList").innerHTML =
+      tips.slice(0, 5)
+      .map(tip => `<li>${tip}</li>`)
+      .join("");
+  }
+
+
+  /* ==============================
+     SECURITY HELPER
+  ============================== */
+
+  function escapeHtml(value) {
+
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+
+  /* ==============================
+     INITIALIZE
+  ============================== */
+
+  function initializeApp() {
+
+    updateDate();
+
+    loadDarkMode();
+
+    loadProfile();
+
+    loadGoals();
+
+    renderWater();
+
+    updateDashboard();
+  }
+
+
+  initializeApp();
+
+</script>
+
+
+<!-- IBM WATSON ORCHESTRATE -->
+<script>
+
+  window.wxOConfiguration = {
+
+    orchestrationID:
+      "7c9bc189ad6d4b0c9e0db66202cd39dd_733b63e0-2a31-4c9f-8212-00d8f64991e6",
+
+    hostURL:
+      "https://au-syd.watson-orchestrate.cloud.ibm.com",
+
+    rootElementID: "root",
+
+    deploymentPlatform: "ibmcloud",
+
+    crn:
+      "crn:v1:bluemix:public:watsonx-orchestrate:au-syd:a/7c9bc189ad6d4b0c9e0db66202cd39dd:733b63e0-2a31-4c9f-8212-00d8f64991e6::",
+
+    chatOptions: {
+      agentId:
+        "88419e09-a535-4a06-8c74-7ec493eedfc0"
+    }
+  };
+
+
+  setTimeout(function() {
+
+    const script =
+      document.createElement("script");
+
+    script.src =
+      `${window.wxOConfiguration.hostURL}/wxochat/wxoLoader.js?embed=true`;
+
+    script.addEventListener("load", function() {
+
+      if (
+        typeof wxoLoader !== "undefined"
+      ) {
+        wxoLoader.init();
+      }
+
+    });
+
+    document.head.appendChild(script);
+
+  }, 0);
+
+</script>
+
+</body>
+</html>
